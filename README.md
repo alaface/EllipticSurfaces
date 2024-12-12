@@ -1,4 +1,4 @@
-# LiftHomomorphism: A Function to Lift Homomorphisms Between Groups
+# Lift Homomorphisms
 
 This repository contains a Magma implementation of the `LiftHomomorphism` function, designed to lift a homomorphism $f: \mathbb{Z}^8 \to A$ to a homomorphism $\mathbb{Z}^{10} \to G \oplus \mathbb{Z}$, where $G$ and $A$ are finite abelian groups.
 
