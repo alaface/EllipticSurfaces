@@ -38,8 +38,8 @@
 
 ### Comments for the Example
 This example demonstrates how to use the library:
-1. Define the groups $G$ and $A$. Here, $G$ is a rank-4 lattice, and $A$ is a rank-2 lattice.
-2. Define the homomorphism `GA_Homomorphism: G -> A`, which projects the second component of $G$ modulo 2.
+1. Define the groups $G$ and $A$. Here, $G = \mathbb Z/4\mathbb Z$ and $A = \mathbb Z/2\mathbb Z$.
+2. Define the quotient homomorphism `GA_Homomorphism: G -> A`.
 3. Define the space $\mathbb{Z}^8$ and the homomorphism `f: \mathbb{Z}^8 -> A`. The homomorphism `f` maps the fourth generator of $\mathbb{Z}^8$ to $A.1$.
 4. Call the `LiftHomomorphism` function to obtain the lifted homomorphism $\mathbb{Z}^{10} \to G + \mathbb{Z}$.
 5. Use the lifted homomorphism to find the (-2)-curves of the surface.
