@@ -1,85 +1,122 @@
-// Defines the function that lifts the homomorphism f: Z^8 -> A to a homomorphism Z^10 -> G + Z
+// Function to lift a homomorphism f: Z^8 -> A to a homomorphism Z^10 -> G + Z
+// Input:
+//   - GA_Homomorphism: A homomorphism from G to A
+//   - f: A homomorphism from Z^8 to A
+// Output:
+//   - LiftedHom: A homomorphism from Z^10 to G + Z
+//   - Subgroup: A subgroup of the codomain of LiftedHom
 function LiftHomomorphism(GA_Homomorphism, f)
-    // Extract the target group A and the domain G from the first homomorphism
     G := Domain(GA_Homomorphism);
     A := Codomain(GA_Homomorphism);
     
-    // Define the vector spaces Z^8 and Z^9 as free groups
-    Z8 := Domain(f); 
+    Z8 := Domain(f);
     Z9 := RSpace(BaseRing(Z8), 9);
-    K := Z9![1, 2, 3, 0, 9, 6, 3, 4, 2]; // Canonical divisor in Z9
+    K := Z9![1, 2, 3, 0, 9, 6, 3, 4, 2];
     
-    // Define the homomorphism Z^9 -> Z^8 that projects onto the first 8 components
     phi := hom<Z9 -> Z8 | [Z8.i : i in [1..8]] cat [Z8!0]>;
-    
-    // Define f_phi as a lambda function that accepts elements of Z^9
     f_phi := func<x | f(phi(x))>;
     
-    // Build the lifting: for each generator of Z^9, choose an arbitrary preimage in G
     images := [];
-    KernelGen := Kernel(GA_Homomorphism).1; // Generator of the kernel of GA_Homomorphism
-    
-    // Arbitrary preimages for i from 2 to 9
+    KernelGen := Kernel(GA_Homomorphism).1;
+
     for i in [2..9] do
         elem := f_phi(Z9.i);
         preimage := IsCoercible(G, elem @@ GA_Homomorphism) select elem @@ GA_Homomorphism else G!0;
         Append(~images, preimage);
     end for;
     
-    // Compute the image of the first generator using K and the remaining generators
     coeffs := [-2, -3, 0, -9, -6, -3, -4, -2];
     images := [KernelGen + &+[coeffs[i] * images[i] : i in [1..#coeffs]]] cat images;
-
-    // Define the lifted homomorphism using the constructed list
+    
     LiftedHom := hom<Z9 -> G | images>;
 
     Z10 := RSpace(Integers(), 10);
     H := Z10.1;
     E := [Z10.i : i in [2..10]];
     GG := DirectSum(G, RSpace(Integers(), 1));
-    gg := hom<Z10 -> GG | [GG.3] cat [GG!(Eltseq(LiftedHom(b)) cat [0]) : b in Basis(Z9)]>;
+    n := #Generators(GG);
+    gg := hom<Z10 -> GG | [GG.n] cat [GG!(Eltseq(LiftedHom(b)) cat [0]) : b in Basis(Z9)]>;
     lis := [E[i] - E[i+1] : i in [8,7,6,5,4,3]] cat [H - E[1] - E[2] - E[3], E[2] - E[3], E[1] - E[2]];
     M := Matrix([E[1]] cat lis);
     h := hom<Z10 -> Z10 | M^(-1)>;
     LiftedHom := hom<Z10 -> GG | [(h * gg)(b) : b in Basis(Z10)]>;
 
-    K := Z10![-3, 1, 1, 1, 1, 1, 1, 1, 1, 1]; // Canonical divisor in Z10
+    K := Z10![-3, 1, 1, 1, 1, 1, 1, 1, 1, 1];
     
     return LiftedHom, sub<GG | LiftedHom(K)>;
 end function;
 
-// Define the groups G and A
-G := RSpace(Integers(), [2, 4]); // G = Z/2 x Z/4
-A := RSpace(Integers(), [2, 2]); // A = Z/2 x Z/2
+// Function to compute a quadratic form value
+// Input:
+//   - a, b: Elements of a lattice represented as vectors
+// Output:
+//   - The value of the quadratic form qua(a, b)
+qua := function(a, b)
+    a := Eltseq(a);
+    b := Eltseq(b);
+    return a[1] * b[1] - &+[a[i] * b[i] : i in [2..#a]];
+end function;
 
-// Define the homomorphism GA_Homomorphism: G -> A
-// Projection of the second component of G modulo 2
-GA_Homomorphism := hom<G -> A | [A.1, A.2]>;
+// Function to find all the (-2)-curves of the surface
+// Input:
+//   - f: A homomorphism from a Picard lattice to a group
+// Output:
+//   - Q: all the (-2)-curves of the surface
+//   - CartanName: The Cartan type of the lattice
+FindComp := function(f)
+    Pic := Domain(f);
+    K := Pic![-3, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+    G := Parent(f(K));
+    H := sub<G|f(K)>;
+    d := Lcm([u : u in Moduli(G) | u ne 0]);
+    m := Min([n : n in [1..d] | n * f(K) eq Zero(G)]);
 
-// Define the space Z^8 and the homomorphism f: Z^8 -> A
-Z8 := RSpace(Integers(), 8);
-f := hom<Z8 -> A | [A.1, A.2, A.1, A.2, A.1, A.2, A.1, A.2]>; // Alternates the generators of A
+    S10 := Sym(10);
+    gens := [PermutationMatrix(Integers(), S10!(i, i+1)) : i in [2..8]] 
+             cat [DiagonalJoin(Matrix([[2, -1, -1, -1], 
+                                       [1,  0, -1, -1], 
+                                       [1, -1,  0, -1], 
+                                       [1, -1, -1,  0]]),
+                 IdentityMatrix(Integers(), 6))];
+    W := MatrixGroup<10, Integers() | gens>;
 
-// Call the LiftHomomorphism function to obtain the lifted homomorphism Z^10 -> G + Z
-LiftedHom := LiftHomomorphism(GA_Homomorphism, f);
+    v := Vector([0, 1, -1, 0, 0, 0, 0, 0, 0, 0]);
+    S := [C : C in v^W | f(C) in H];
+    cur := {};
+    for u in S do
+        q := Quotrem(u[1], 3 * m);
+        Include(~cur, u + q * m * K);
+    end for;
 
-// Print the lifted homomorphism
-Pic := Domain(LiftedHom);
-K := Pic![-3, 1, 1, 1, 1, 1, 1, 1, 1, 1];
-[LiftedHom(b) : b in Basis(Pic)];
+    cc := [Pic.i - Pic.(i+1) : i in [2..9]];
+    Q := {E : E in cur | E[1] eq 0 and E in cc};
+    cur := cur diff {E : E in cur | E[1] eq 0};
+    while cur ne {} do
+        d := Minimum({E[1] : E in cur});
+        C := Random([E : E in cur | E[1] eq d]);
+        if Minimum([qua(C, E) : E in Q]) ge 0 then Q := Q join {C}; end if;
+        cur := cur diff {C};
+    end while;
+    M := Matrix(#Q, #Q, [qua(a, b) : a, b in Q]);
+    return Q, CartanName(-M);
+end function;
 
-// Compute the Weyl group of E_8
-S10 := Sym(10);
-gens := [PermutationMatrix(Integers(), S10!(i, i+1)) : i in [2..8]] 
-         cat [DiagonalJoin(Matrix([[2, -1, -1, -1], 
-                                    [1,  0, -1, -1], 
-                                    [1, -1,  0, -1], 
-                                    [1, -1, -1,  0]]),
-              IdentityMatrix(Integers(), 6))];
-W := MatrixGroup<10, Integers() | gens>;
-
-// Define an initial vector of norm -2
-v := Vector([0, 1, -1, 0, 0, 0, 0, 0, 0, 0]);
-
-// Generate all (-2)-classes of E_8 via the Weyl group
-S := v^W;
+// Function to find all the (-1)-curves of the surface
+// Input:
+//   - cur: A set of roots
+//   - m: A scalar value
+// Output:
+//   - curve: all the (-1)-curves of the surface
+FindSections := function(cur, m)
+    Pic := ToricLattice(10);
+    cur := [Pic!Eltseq(C) : C in cur];
+    D := DiagonalMatrix([1] cat [-1 : i in [2..10]]);
+    K := Pic!([-3] cat [1 : i in [2..10]]);
+    P := &meet[HalfspaceToPolyhedron(C * D, 0) : C in cur] meet HyperplaneToPolyhedron(-K * D, 1);
+    pts := [Pic!Eltseq(p) : p in Points(CompactPart(P))];
+    curve := [];
+    for p in pts do
+        Append(~curve, p + Quotrem(qua(p, p) + 1, 2) * K);
+    end for;
+    return curve;
+end function;
