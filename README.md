@@ -1,24 +1,70 @@
-# Lift Homomorphisms
+// ## Commands in the Library
+// 
+// 1. **LiftHomomorphism(GA_Homomorphism, f)**:
+//    - Lifts a homomorphism f: Z^8 -> A to a homomorphism Z^10 -> G + Z.
+//    - Input:
+//      - `GA_Homomorphism`: A homomorphism from G to A.
+//      - `f`: A homomorphism from Z^8 to A.
+//    - Output:
+//      - `LiftedHom`: A homomorphism from Z^10 to G + Z.
+//      - `Subgroup`: A subgroup of the codomain of LiftedHom.
+// 
+// 2. **qua(a, b)**:
+//    - Computes a quadratic form value for two lattice elements.
+//    - Input:
+//      - `a, b`: Elements of a lattice represented as vectors.
+//    - Output:
+//      - The value of the quadratic form.
+// 
+// 3. **FindComp(f)**:
+//    - Finds all the (-2)-curves of a surface.
+//    - Input:
+//      - `f`: A homomorphism from a Picard lattice to a group.
+//    - Output:
+//      - `Q`: All the (-2)-curves of the surface.
+//      - `CartanName`: The Cartan type of the lattice.
+// 
+// 4. **FindSections(cur, m)**:
+//    - Finds all the (-1)-curves of a surface.
+//    - Input:
+//      - `cur`: A set of roots.
+//      - `m`: A scalar value.
+//    - Output:
+//      - A set of (-1)-curves of the surface.
+// 
+// ## Example of liftings with fibration D~8
+// 
+// ### Comments for the Example
+// 
+// Define the groups G and A
+// G is a rank 4 lattice and A is a rank 2 lattice.
+// Define the homomorphism GA_Homomorphism: G -> A, which projects the second component of G modulo 2.
+// Define the space Z^8 and the homomorphism f: Z^8 -> A. The homomorphism f maps the fourth generator of Z^8 to A.1.
+// Call the LiftHomomorphism function to obtain the lifted homomorphism Z^10 -> G + Z.
+// Find the (-2)-curves of the surface using the lifted homomorphism.
+// Finally, find the (-1)-curves of the surface.
+// 
+// ### Magma Session Example
 
-This repository contains a Magma implementation of the `LiftHomomorphism` function, designed to lift a homomorphism $f: \mathbb{Z}^8 \to A$ to a homomorphism $\mathbb{Z}^{10} \to G \oplus \mathbb{Z}$, where $G$ and $A$ are finite abelian groups.
+// Define the groups G and A
+G := RSpace(Integers(), [4]);
+A := RSpace(Integers(), [2]);
 
-## Description
+// Define the homomorphism GA_Homomorphism: G -> A
+GA_Homomorphism := hom<G -> A | [A.1]>;
 
-The `LiftHomomorphism` function performs the following tasks:
-1. Lifts a homomorphism $f: \mathbb{Z}^8 \to A$ to a homomorphism $\mathbb{Z}^9 \to G$.
-2. Constructs a homomorphism $\mathbb{Z}^{10} \to G \oplus \mathbb{Z}$, where $G$ is the domain of a given homomorphism $G \to A$, and $\mathbb{Z}$ is added to the codomain.
+// Define the space Z^8 and the homomorphism f: Z^8 -> A
+Z8 := RSpace(Integers(), 8);
+f := hom<Z8 -> A | [u*A.1 : u in [0, 0, 0, 1, 0, 0, 0, 0]]>;
 
-The lifting process is guided by a canonical divisor and coefficients that are combined to define the image of generators.
+// Call the LiftHomomorphism function to obtain the lifted homomorphism Z^10 -> G + Z
+LiftedHom := LiftHomomorphism(GA_Homomorphism, f);
 
-## Requirements
+// Find the (-2)-curves of the surface using the lifted homomorphism
+cur := FindComp(LiftedHom);
 
-To run this program, you need the [Magma computational algebra system](https://magma.maths.usyd.edu.au/magma/).
-
-## Usage
-
-Here is an example of how to use the `LiftHomomorphism` function:
-
-### Code Example
+// Find the (-1)-curves of the surface
+FindSections(cur, 2);
 
 ```magma
 // Define the groups G and A
