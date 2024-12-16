@@ -11,23 +11,22 @@ function LiftHomomorphism(GA_Homomorphism, f)
     
     Z8 := Domain(f);
     Z9 := RSpace(BaseRing(Z8), 9);
-    K := Z9![1, 2, 3, 0, 9, 6, 3, 4, 2];
-    
-    phi := hom<Z9 -> Z8 | [Z8.i : i in [1..8]] cat [Z8!0]>;
+
+    phi := hom<Z9->Z8 | [Z8.i : i in [1..8]] cat [Z8![-2,-4,-6,-3,-5,-4,-3,-2]]>;
     f_phi := func<x | f(phi(x))>;
     
-    images := [];
     ker := Kernel(GA_Homomorphism);
-   if #ker eq 1 then KernelGen := Zero(ker); else KernelGen := ker.1; end if;
+    if #ker eq 1 then KernelGen := Zero(ker); else KernelGen := ker.1; end if;
 
-    for i in [2..9] do
+    images := [];
+    for i in [1..8] do
         elem := f_phi(Z9.i);
         preimage := IsCoercible(G, elem @@ GA_Homomorphism) select elem @@ GA_Homomorphism else G!0;
         Append(~images, preimage);
     end for;
     
-    coeffs := [-2, -3, 0, -9, -6, -3, -4, -2];
-    images := [KernelGen + &+[coeffs[i] * images[i] : i in [1..#coeffs]]] cat images;
+    coeffs := [-2,-4,-6,-3,-5,-4,-3,-2];
+    images := images cat [-KernelGen + &+[coeffs[i] * images[i] : i in [1..#coeffs]]];
     
     LiftedHom := hom<Z9 -> G | images>;
 
@@ -37,7 +36,7 @@ function LiftHomomorphism(GA_Homomorphism, f)
     GG := DirectSum(G, RSpace(Integers(), 1));
     n := #Generators(GG);
     gg := hom<Z10 -> GG | [GG.n] cat [GG!(Eltseq(LiftedHom(b)) cat [0]) : b in Basis(Z9)]>;
-    lis := [E[i] - E[i+1] : i in [8,7,6,5,4,3]] cat [H - E[1] - E[2] - E[3], E[2] - E[3], E[1] - E[2]];
+    lis := [E[i] - E[i+1] : i in [1..3]] cat [H - &+E[1..3]] cat [E[i] - E[i+1] : i in [4..8]];
     M := Matrix([E[1]] cat lis);
     h := hom<Z10 -> Z10 | M^(-1)>;
     LiftedHom := hom<Z10 -> GG | [(h * gg)(b) : b in Basis(Z10)]>;
@@ -85,8 +84,10 @@ FindComp := function(f)
     S := [C : C in v^W | f(C) in H];
     cur := {};
     for u in S do
-        q := Quotrem(u[1], 3 * m);
-        Include(~cur, u + q * m * K);
+        r := [n : n in [0..m] | f(u + n*K) eq Zero(H)][1];
+        C := u + r*K;
+        q := Quotrem(C[1], 3 * m);
+        Include(~cur, C + q * m * K);
     end for;
 
     cc := [Pic.i - Pic.(i+1) : i in [2..9]];
