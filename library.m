@@ -17,7 +17,8 @@ function LiftHomomorphism(GA_Homomorphism, f)
     f_phi := func<x | f(phi(x))>;
     
     images := [];
-    KernelGen := Kernel(GA_Homomorphism).1;
+    ker := Kernel(GA_Homomorphism);
+    if Order(ker) eq 0 then KernelGen := Zero(ker); else KernelGen := ker.1; end if;
 
     for i in [2..9] do
         elem := f_phi(Z9.i);
