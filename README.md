@@ -30,7 +30,7 @@
 - **Purpose**: Finds all the (-1)-curves of a surface.
 - **Inputs**:
   - `cur`: A set of roots.
-  - `m`: A scalar value.
+  - `m`: The index of the surface.
 - **Output**:
   - A set of (-1)-curves of the surface.
 
